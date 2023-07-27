@@ -1,0 +1,3 @@
+interface ApiErrorResponse {
+    detail: string;
+}
