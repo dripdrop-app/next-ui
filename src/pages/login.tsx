@@ -15,12 +15,12 @@ interface LoginForm {
 	password: string;
 }
 
-const Login = () => {
+const LoginPage = () => {
 	const { data, isMutating, trigger, error } = useSWRMutation<
 		AuthenticatedResponse,
 		ApiErrorResponse,
 		string,
-		LoginForm
+		LoginBody
 	>('/api/auth/login', (url, options) =>
 		fetch(url, {
 			method: 'POST',
@@ -101,4 +101,4 @@ const Login = () => {
 
 export const getServerSideProps = (context: GetServerSidePropsContext) => getRootServerSideProps(context, false);
 
-export default Login;
+export default LoginPage;
