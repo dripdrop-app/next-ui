@@ -4,9 +4,23 @@ import Link from 'next/link';
 import Head from 'next/head';
 import useSWRMutation from 'swr/mutation';
 
-import { getRootServerSideProps } from './utils/auth';
+import { getRootServerSideProps } from '../utils/auth';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const AccountPage = ({ user }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+	const { trigger, data, isMutating } = useSWRMutation('/api/auth/logout', (url) =>
+		fetch(url, { method: 'GET' }).then((res) => res.status)
+	);
+
+	const router = useRouter();
+
+	useEffect(() => {
+		if (!isMutating && data) {
+			router.push('/login');
+		}
+	}, [data, isMutating, router]);
+
 	if (!user) {
 		return null;
 	}
@@ -25,7 +39,7 @@ const AccountPage = ({ user }: InferGetServerSidePropsType<typeof getServerSideP
 					<Button component={Link} href="/privacy">
 						Privacy Policy
 					</Button>
-					<Button variant="light" color="red">
+					<Button variant="light" color="red" onClick={() => trigger()}>
 						Logout
 					</Button>
 				</Stack>

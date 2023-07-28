@@ -18,17 +18,18 @@ type GetRootServerSideProps = {
 export const getRootServerSideProps: GetRootServerSideProps = async (context, authenticateUser = true) => {
 	if (context.req.url && context.req.headers.host) {
 		const url = new URL(context.req.url, `http://${context.req.headers.host}`);
-
-		const response = await fetch(new URL('/api/auth/session', env.API_SERVER_URL), {
-			headers: Object(context.req.headers),
-		});
-		if (response.status === 200) {
-			if (url.pathname === '/login') {
-				const redirect = url.searchParams.get('redirect') ?? '/';
-				return { redirect: { statusCode: 302, destination: redirect } };
+		try {
+			const response = await fetch(new URL('/api/auth/session', env.API_SERVER_URL), {
+				headers: Object(context.req.headers),
+			});
+			if (response.status === 200) {
+				if (url.pathname === '/login') {
+					const redirect = url.searchParams.get('redirect') ?? '/';
+					return { redirect: { statusCode: 302, destination: redirect } };
+				}
+				return { props: { user: await response.json() } };
 			}
-			return { props: { user: await response.json() } };
-		}
+		} catch (e) {}
 		if (authenticateUser) {
 			if (url.pathname !== '/login') {
 				const redirect = `${url.pathname}${url.search}`;
@@ -49,8 +50,10 @@ export const withRootServerSideProps = <T>(
 	authenticateUser: boolean = true
 ) => {
 	return async (context: GetServerSidePropsContext) => {
-		const layoutServerSideProps = await getRootServerSideProps(context, authenticateUser);
-		const componentServerSideProps = await Promise.resolve(getServerSideProps(context));
+		const [layoutServerSideProps, componentServerSideProps] = await Promise.all([
+			getRootServerSideProps(context, authenticateUser),
+			getServerSideProps(context),
+		]);
 
 		if ('redirect' in layoutServerSideProps || 'notFound' in layoutServerSideProps) {
 			return layoutServerSideProps;
